@@ -3,25 +3,28 @@
 
 # Zipkin Library for Go
 
-Zipkin Go是OpenZipkin社区支持的Zipkin的官方Go Tracer的实现
+Zipkin Go是由OpenZipkin社区支持的Zipkin官方的Go语言链路追踪的实现
 ## packages
 zipkin-go的构建考虑到了OpenZipkin社区甚至第3方之间的互操作性，该库由多个软件包组成。
-可以在此存储库的根文件夹中找到主要的跟踪实现。 Reusable parts not considered core implementation or deemed beneficiary for usage by others are placed in their own packages within this repository.
+可以在此存储库的根文件夹中找到主要的tracer实现。 Reusable parts not considered core implementation or deemed beneficiary for usage by others are placed in their own packages within this repository.
 
 ### model包
-该库实现了模型包中提供的Zipkin V2 Span模型。 它包含一个与Zipkin V2 API兼容的Go数据模型，并且可以自动清理，解析和解序列化官方Zipkin V2收集器所使用的所需JSON表示形式。
+该库实现了模型包中提供的Zipkin V2 Span模型。 它包含一个go的数据模型并且与Zipkin V2 API兼容，而且可以从获得到的json自动清理、解析和(反)序列化,他被用作Zipkin官方 V2版本的收集器。
+
 ### propagation包
-propagation和B3子包包含用于在参与跟踪的服务之间传播SpanContext（跨度标识符和采样标志）的逻辑。 目前，HTTP和GRPC支持Zipkin B3传播。
+propagation和B3子包，拥有用于链路追踪的，在服务之间传播SpanContext （span标识符和采样标志）的逻辑。 目前，Zipkin B3的传播支持HTTP和GRPC。
+
 ### middleware包
-中间件子包包含官方支持的中间件处理程序和跟踪包装器。
+中间件子包中包含官方支持的中间件处理程序和跟踪包装器。
 
 *  http
-提供了一种易于使用的http.Handler中间件来跟踪服务器端请求。 这使人们可以在使用标准库服务器以及大多数可用的更高级别框架的应用程序中使用此中间件。 一些框架将拥有自己的工具和中间件，以更好地映射其生态系统。
-对于HTTP客户端操作，NewTransport可以返回http.RoundTripper实现，该实现可以包装标准http.Client的Transport或提供的自定义提供的内容，并按请求跟踪添加。 由于HTTP请求可以具有一个或多个重定向，因此建议始终在* http.Client调用级别或父函数级别周围用一个Span包围HTTP客户端调用。
-为方便起见，提供了NewClient，它返回一个HTTP客户端，该客户端嵌入* http.Client并在调用DoWithAppSpan（）方法时提供围绕HTTP调用的应用程序范围。
+提供了一种易于使用的跟踪服务器端请求的http.Handler中间件。 这使人们可以在使用标准库服务器以及大多数可用的更高级别框架的应用程序中使用此中间件。 一些框架将拥有自己的工具和中间件，以更好地映射其生态系统。
+对于HTTP客户端操作，NewTransport可以返回http.RoundTripper，该实现可以包装标准http.Client的Transport或提供的自定义提供的内容，并增加每一个请求的路径追踪。 由于HTTP请求可以具有一个或多个重定向，因此建议始终在*http.Client调用级别或父函数级别周围用一个Span包围HTTP客户端来调用。
+为方便起见，提供了NewClient，它返回一个HTTP客户端，该客户端嵌入*http.Client并在调用DoWithAppSpan（）方法时提供围绕HTTP调用的应用程序范围。
+
 * grpc
-易于使用的grpc.StatsHandler中间件用于跟踪gRPC服务器和客户端请求。
-对于服务器，请在调用NewServer时传递NewServerHandler，例如
+使用grpc.StatsHandler中间件来跟踪gRPC服务器和客户端请求是很方便的。
+对于一个服务器，请在调用NewServer时传递NewServerHandler，例如
 
 ```
 import (
@@ -42,9 +45,9 @@ import (
 conn, err = grpc.Dial(addr, grpc.WithStatsHandler(zipkingrpc.NewClientHandler(tracer)))
 ```
 * reporter
-报告程序包包含各种Reporter实现使用的接口。 它被导出到其自己的程序包中，因为第三方可以使用它们在其自己的库中使用这些Reporter程序包以导出到Zipkin生态系统。 zipkin-go跟踪器还使用该接口来接受第三方Reporter实现。
+reporter包中包含各种用Reporter实现的的接口。 它被导出到其自己的程序包中，因为第三方可以在自己的库中使用这些Reporter程序包以构建一个Zipkin生态系统。 zipkin-go跟踪器还使用该接口来应用第三方Reporter的实现。
 1. HTTP Reporter
-Zipkin用户使用HTTP上的JSON将Spans传输到Zipkin服务器时使用的最常见的Reporter类型。 报告程序拥有一个缓冲区，并异步向后端报告。
+Zipkin用户传输spans到Zipkin服务器时使用的最常见的Reporter类型就是JSON。 Reporter程序拥有一个缓冲区，并异步向后端报告。
 2. Kafka Reporter
 高性能Reporter使用Kafka Producer消化JSON V2 Spans来将Span传输到Zipkin服务器。 记者在下面使用Sarama异步制作器。
 
@@ -82,45 +85,45 @@ import (
 )
 
 func Example() {
-	// set up a span reporter
+	// 设置一个 span reporter
 	reporter := logreporter.NewReporter(log.New(os.Stderr, "", log.LstdFlags))
 	defer reporter.Close()
 
-	// create our local service endpoint
+	// 创建本地服务的 endpoint
 	endpoint, err := zipkin.NewEndpoint("myService", "localhost:0")
 	if err != nil {
 		log.Fatalf("unable to create local endpoint: %+v\n", err)
 	}
 
-	// initialize our tracer
+	// 初始化追踪器
 	tracer, err := zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(endpoint))
 	if err != nil {
 		log.Fatalf("unable to create tracer: %+v\n", err)
 	}
 
-	// create global zipkin http server middleware
+	// 创建一个全局的zipkin http 服务器中间件
 	serverMiddleware := zipkinhttp.NewServerMiddleware(
 		tracer, zipkinhttp.TagResponseSize(true),
 	)
 
-	// create global zipkin traced http client
+	// 创建一个全局的zipkin http 客户端
 	client, err := zipkinhttp.NewClient(tracer, zipkinhttp.ClientTrace(true))
 	if err != nil {
 		log.Fatalf("unable to create client: %+v\n", err)
 	}
 
-	// initialize router
+	// 初始化路由
 	router := mux.NewRouter()
 
-	// start web service with zipkin http server middleware
+	// 使用zipkin http服务器中间件开启web服务
 	ts := httptest.NewServer(serverMiddleware(router))
 	defer ts.Close()
 
-	// set-up handlers
+	// 建立 handlers
 	router.Methods("GET").Path("/some_function").HandlerFunc(someFunc(client, ts.URL))
 	router.Methods("POST").Path("/other_function").HandlerFunc(otherFunc(client))
 
-	// initiate a call to some_func
+	// 发起调用一个具体的方法
 	req, err := http.NewRequest("GET", ts.URL+"/some_function", nil)
 	if err != nil {
 		log.Fatalf("unable to create http request: %+v\n", err)
@@ -139,11 +142,11 @@ func someFunc(client *zipkinhttp.Client, url string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("some_function called with method: %s\n", r.Method)
 
-		// retrieve span from context (created by server middleware)
+		//从上下中找回被服务器中间件创建的span 
 		span := zipkin.SpanFromContext(r.Context())
 		span.Tag("custom_key", "some value")
 
-		// doing some expensive calculations....
+		// 做一些耗时的操作
 		time.Sleep(25 * time.Millisecond)
 		span.Annotate(time.Now(), "expensive_calc_done")
 
