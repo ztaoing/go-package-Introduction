@@ -1,7 +1,7 @@
 
 *此文使用google翻译完成，并对语义进行了调整*
 
-# Zipkin Library for Go
+# Zipkin Library for Go [https://github.com/openzipkin/zipkin-go](https://github.com/openzipkin/zipkin-go)
 
 Zipkin Go是由OpenZipkin社区支持的Zipkin官方的Go语言链路追踪的实现
 ## packages
