@@ -15,6 +15,7 @@
 * etcd/clientv3 [github.com/coreos/etcd/clientv3](github.com/coreos/etcd/clientv3)
 * go-zookeeper/zk [github.com/samuel/go-zookeeper/zk](github.com/samuel/go-zookeeper/zk)
 * opentracing-go [https://github.com/opentracing/opentracing-go](https://github.com/opentracing/opentracing-go)
-* go-redis [github.com/go-redis/redis]( github.com/go-redis/redis)
+* go-redis [github.com/go-redis/redis](github.com/go-redis/redis)
 * gorose [github.com/gohouse/gorose/v2](github.com/gohouse/gorose/v2)``
 * juju/ratelimit [github.com/juju/ratelimit](github.com/juju/ratelimit)
+* unknwon/com[ github.com/unknwon/com]( github.com/unknwon/com)
