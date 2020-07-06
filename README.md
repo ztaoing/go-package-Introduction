@@ -20,3 +20,4 @@
 * juju/ratelimit [github.com/juju/ratelimit](github.com/juju/ratelimit)
 * unknwon/com[ github.com/unknwon/com]( github.com/unknwon/com)
 * go-kit/kit/metrics/prometheus [github.com/go-kit/kit/metrics/prometheus](github.com/go-kit/kit/metrics/prometheus)
+* sentinel-golang [github.com/alibaba/sentinel-golang](https://github.com/alibaba/sentinel-golang)
