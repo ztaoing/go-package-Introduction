@@ -1,10 +1,11 @@
 # zipkin-go-opentracing 
 [https://github.com/openzipkin-contrib/zipkin-go-opentracing](https://github.com/openzipkin-contrib/zipkin-go-opentracing)
 
-用于本机Zipkin跟踪实现Zipkin Go的OpenTracing桥。
+用于本机Zipkin跟踪实现Zipkin Go的OpenTracing桥梁。
 ## Notes
-该软件包是一个简单的桥梁，允许OpenTracing API使用者使用Zipkin作为其跟踪后端。 有关如何使用跨度和轨迹的详细信息，建议您查看OpenTracing API的文档和自述文件。
-对于有兴趣将Zipkin跟踪添加到其Go服务中的开发人员，我们建议您使用Go kit，它是一款出色的工具包，可用于通过Zipkin来监控您的分布式系统，以及用于将传输，中间件/工具和业务逻辑等领域进行清晰分离的工具。
+该软件包是一个简单的桥梁，允许OpenTracing API使用者使用Zipkin作为其跟踪后端。
+ 有关如何使用span和轨迹的详细信息，建议您查看OpenTracing API的文档和自述文件。
+对于有兴趣将Zipkin跟踪添加到其Go服务中的开发人员，我们建议您使用Go kit，它是一款出色的工具包，可用于通过Zipkin来监控您的分布式系统，以及用于将传输，在中间件/工具和业务逻辑等领域进行清晰分离的工具。
 ## Examples
 请检查zipkin-go软件包，以获取有关如何设置Zipkin Go本机跟踪程序的信息。 设置完成后，您可以简单地调用Wrap函数来创建与OpenTracing兼容的网桥。
 
@@ -21,26 +22,26 @@ func main() {
   
 	// zipkin / opentracing specific stuff
 	{
-		// set up a span reporter
+		// 建立一个span的reporter
 		reporter := zipkinhttp.NewReporter("http://zipkinhost:9411/api/v2/spans")
 		defer reporter.Close()
   
-		// create our local service endpoint
+		// 创建本地服务的endpoint
 		endpoint, err := zipkin.NewEndpoint("myService", "myservice.mydomain.com:80")
 		if err != nil {
 			log.Fatalf("unable to create local endpoint: %+v\n", err)
 		}
 
-		// initialize our tracer
+		// 初始化链路追踪器
 		nativeTracer, err := zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(endpoint))
 		if err != nil {
 			log.Fatalf("unable to create tracer: %+v\n", err)
 		}
 
-		// use zipkin-go-opentracing to wrap our tracer
+		// 使用 zipkin-go-opentracing 包装 tracer
 		tracer := zipkinot.Wrap(nativeTracer)
   
-		// optionally set as Global OpenTracing tracer instance
+		// 可是选择设置为全局的追踪实例
 		opentracing.SetGlobalTracer(tracer)
 	}
   
@@ -61,7 +62,7 @@ Delegator是DelegatingCarrier使用的格式。
 ```
 func Wrap(tr *zipkin.Tracer, opts ...TracerOption) opentracing.Tracer
 ```
-Wrap收到一个zipkin跟踪器并返回一个opentrace跟踪器
+Wrap使用一个zipkin跟踪器并返回一个opentrace的跟踪器
 #### type B3InjectOption
 
 ```
@@ -76,7 +77,7 @@ const (
     B3InjectBoth
 )
 ```
-可用的B3InjectOption值
+可选的B3InjectOption值
 #### type DelegatingCarrier
 
 ```
@@ -85,7 +86,7 @@ type DelegatingCarrier interface {
     SetState(model.SpanContext) error
 }
 ```
-DelegatingCarrier是一个灵活的载体接口，可以通过具有存储跟踪元数据并且已经知道如何进行序列化的方式的类型来实现
+DelegatingCarrier是一个灵活的载体接口，可以通过具有存储trace元数据并且已经知道如何进行序列化
 #### type FinisherWithDuration
 
 ```
@@ -93,7 +94,7 @@ type FinisherWithDuration interface {
     FinishedWithDuration(d time.Duration)
 }
 ```
-FinisherWithDuration允许以给定的持续时间完成跨度
+FinisherWithDuration允许以给定的持续时间完成span
 #### type SpanContext 
 
 ```
@@ -112,7 +113,7 @@ ForeachBaggageItem属于opentracing.SpanContext接口
 ```
 键入TracerOption func（opts * TracerOptions）
 ```
-TracerOption允许使用功能选项。 参见：http://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
+TracerOption允许使用的功能选项。 参见：http://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
 #### func WithB3InjectOption 
 
 ```
