@@ -211,7 +211,7 @@ func makeCreateRequestFunc(method string, target *url.URL, enc EncodeRequestFunc
 -------
 encode_decode.go
 
-```
+```golang
 package http
 
 import (
@@ -250,7 +250,7 @@ type DecodeResponseFunc func(context.Context, *http.Response) (response interfac
 ```
 request_response_funcs.go 
 
-```
+```golang
 package http
 
 import (
@@ -387,7 +387,7 @@ const (
 ```
 server.go
 
-```
+```golang
 package http
 
 import (
