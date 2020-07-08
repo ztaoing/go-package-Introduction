@@ -16,7 +16,7 @@
 
 -------
 
-`* endpoint	`: 端点定义了RPC的抽象。[]()
+`endpoint	`: [端点定义了RPC的抽象](https://github.com/ztaoing/go-package-Introduction/blob/master/go-kit/1%E3%80%81endpoint/endpoint.md)
 
 -------
 
@@ -121,10 +121,14 @@
 **transport	包含适用于所有受支持transport的帮手**
 * transport/amqp	Package amqp implements an AMQP transport.
 * transport/awslambda	Package awslambda provides an AWS Lambda transport layer.
-* transport/grpc	Package grpc provides a gRPC binding for endpoints.
+
+`transport/grpc`	提供了一个gRPC 对endpoints绑定.
+
 * transport/grpc/_grpc_test	
 * transport/grpc/_grpc_test/pb	
-* transport/http	Package http provides a general purpose HTTP binding for endpoints.
+
+` transport/http` 对endpoints生成一个目标 HTTP 
+
 * transport/http/jsonrpc	Package jsonrpc provides a JSON RPC (v2.0) binding for endpoints.
 * transport/http/proto	
 * transport/httprp	Package httprp provides an HTTP reverse-proxy transport.
