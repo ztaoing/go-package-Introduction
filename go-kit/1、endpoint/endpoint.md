@@ -1,6 +1,8 @@
 # endpoint
 endpoint是许多Go kit组件的基本构建块。 端点由服务器实现，并由客户端调用。
 
+-------
+
 ***func Nop***
 
 ```
@@ -8,12 +10,16 @@ func Nop(context.Context, interface{}) (interface{}, error)
 ```
 Nop不执行任何操作,并返回nil错误。 对测试有用。
 
+-------
+
 ***type Endpoint***
 
 ```
 type Endpoint func(ctx context.Context, request interface{}) (response interface{}, err error)
 ```
 Endpoint是服务器和客户端的基本构建块。 它代表一个单独的RPC方法。
+
+-------
 
 ***type Failer***
 
@@ -25,9 +31,10 @@ type Failer interface {
 
 Failer可以被包含业务逻辑错误的Go kit响应类型实现。 如果“失败”返回非nil错误，则Go kit传输层可能会将其解释为业务逻辑错误，并且可以对其进行不同于常规的成功响应的方式进行编码。
 
-It's not necessary for your response types to implement Failer, but it may help for more sophisticated use cases. The addsvc example shows how Failer should be used by a complete application.
 
 通常的响应类型不必实现Failer，但对于更复杂的用例可能会有所帮助。 addsvc示例显示了完整的应用程序应如何使用Failer。
+
+-------
 
 ***type Middleware***
 
@@ -36,6 +43,9 @@ type Middleware func(Endpoint) Endpoint
 ```
 Middleware is a chainable behavior modifier for endpoints.
 中间件是一个对endpoints的可连接行为的装饰（装饰者模式）。
+
+-------
+
 ***func Chain***
 
 ```
