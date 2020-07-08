@@ -551,11 +551,7 @@ func NopRequestDecoder(ctx context.Context, r *http.Request) (interface{}, error
 	return nil, nil
 }
 
-// EncodeJSONResponse is a EncodeResponseFunc that serializes the response as a
-// JSON object to the ResponseWriter. Many JSON-over-HTTP services can use it as
-// a sensible default. If the response implements Headerer, the provided headers
-// will be applied to the response. If the response implements StatusCoder, the
-// provided StatusCode will be used instead of 200.
+
 
 //EncodeJSONResponse是一个EncodeResponseFunc，它将响应序列作为JSON对象并序列化到ResponseWriter。 许多基于HTTP的JSON服务都可以将其用作推荐的默认设置。
 // 如果响应实现了Headerer，则提供的headers将应用在响应中。 如果响应实现了StatusCoder，则将使用提供的StatusCode代替200。
@@ -579,13 +575,7 @@ func EncodeJSONResponse(_ context.Context, w http.ResponseWriter, response inter
 	return json.NewEncoder(w).Encode(response)
 }
 
-// DefaultErrorEncoder writes the error to the ResponseWriter, by default a
-// content type of text/plain, a body of the plain text of the error, and a
-// status code of 500. If the error implements Headerer, the provided headers
-// will be applied to the response. If the error implements json.Marshaler, and
-// the marshaling succeeds, a content type of application/json and the JSON
-// encoded form of the error will be used. If the error implements StatusCoder,
-// the provided StatusCode will be used instead of 500.
+
 
 //DefaultErrorEncoder将错误写入ResponseWriter，默认情况下为text/plain的内容类型，错误的纯文本body以及状态码500。
 //如果error实现Headerer，则提供的headers将应用在响应 。
