@@ -7,7 +7,7 @@
 
 > 中间件的使用
 
-按照addsvc示例查看如何连接Zipkin中间件。 所做的更改应该相对较小。
+按照[addsvc](https://github.com/go-kit/kit/tree/master/examples/addsvc)示例可以知道如何连接Zipkin中间件。 所做的更改应该相对较小。
 
 zipkin-go程序包使Reporters可以将Span发送到Zipkin HTTP和Kafka Collector
 
@@ -22,13 +22,13 @@ var (
   zipkinHTTPEndpoint = "http://localhost:9411/api/v2/spans"
 )
 
-// create an instance of the HTTP Reporter.
+// 创建 HTTP Reporter实例.
 reporter := zipkin.NewReporter(zipkinHTTPEndpoint)
 
-// create our tracer's local endpoint (how the service is identified in Zipkin).
+// 创建链路追踪的本地的 endpoint (how the service is identified in Zipkin).
 localEndpoint, err := zipkin.NewEndpoint(serviceName, serviceHostPort)
 
-// create our tracer instance.
+// 创建tracer实例
 tracer, err = zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(localEndpoint))
 ```
 > 追踪资源
@@ -41,7 +41,7 @@ import (
 )
 
 func (svc *Service) GetMeSomeExamples(ctx context.Context, ...) ([]Examples, error) {
-  // Example of annotating a database query:
+  // 注释数据库查询的示例:
   var (
     spanContext model.SpanContext
     serviceName = "MySQL"
@@ -50,36 +50,36 @@ func (svc *Service) GetMeSomeExamples(ctx context.Context, ...) ([]Examples, err
     query       = "select * from example where param = :value"
   )
 
-  // retrieve the parent span from context to use as parent if available.
-  if parentSpan := zipkin.SpanFromContext(ctx); parentSpan != nil {
+  // 从context找回 parent span 
+    if parentSpan := zipkin.SpanFromContext(ctx); parentSpan != nil {
     spanContext = parentSpan.Context()
   }
 
-  // create the remote Zipkin endpoint
+  //创建远端的Zipkin endpoint
   ep, _ := zipkin.NewEndpoint(serviceName, serviceHost)
 
-  // create a new span to record the resource interaction
-  span := zipkin.StartSpan(
+  // 创建一个新的span以记录资源交互 
+   span := zipkin.StartSpan(
     queryLabel,
     zipkin.Parent(parentSpan.Context()),
     zipkin.WithRemoteEndpoint(ep),
   )
 
-	// add interesting key/value pair to our span
-	span.SetTag("query", query)
+	// 在span中增加 key/value 键值对
+		span.SetTag("query", query)
 
-	// add interesting timed event to our span
-	span.Annotate(time.Now(), "query:start")
+	// 在span中增加定时时间
+		span.Annotate(time.Now(), "query:start")
 
-	// do the actual query...
+	// 执行实际的查询操作...
 
-	// let's annotate the end...
+	// 增加结束事件...
 	span.Annotate(time.Now(), "query:end")
 
-	// we're done with this span.
+	// span的处理已经完成.
 	span.Finish()
 
-	// do other stuff
+	// 做其他的事情
 	...
 }
 ```
