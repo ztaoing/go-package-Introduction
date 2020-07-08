@@ -224,28 +224,27 @@ import (
 //一个简单的DecodeRequestFunc可以是JSON从请求的body中解码为具体的请求类型。
 type DecodeRequestFunc func(context.Context, *http.Request) (request interface{}, err error)
 
-// EncodeRequestFunc encodes the passed request object into the HTTP request
-// object. It's designed to be used in HTTP clients, for client-side
-// endpoints. One straightforward EncodeRequestFunc could be something that JSON
-// encodes the object directly to the request body.
+
+//EncodeRequestFunc将传递的请求对象编码为HTTP请求对象。 它被设计用在HTTP客户端，为了客户端的endpoints。 一个简单的EncodeRequestFunc可以将JSON对象直接编码到请求的body中。
 type EncodeRequestFunc func(context.Context, *http.Request, interface{}) error
 
-// CreateRequestFunc creates an outgoing HTTP request based on the passed
-// request object. It's designed to be used in HTTP clients, for client-side
-// endpoints. It's a more powerful version of EncodeRequestFunc, and can be used
-// if more fine-grained control of the HTTP request is required.
+
+//CreateRequestFunc基于传递的请求对象创建一个发送的HTTP请求。 它被设计用在HTTP客户端，为了客户端的endpoints。 
+//它是EncodeRequestFunc的更强大的版本，如果需要对HTTP请求进行更细粒度的控制，则可以使用它。
 type CreateRequestFunc func(context.Context, interface{}) (*http.Request, error)
 
-// EncodeResponseFunc encodes the passed response object to the HTTP response
-// writer. It's designed to be used in HTTP servers, for server-side
-// endpoints. One straightforward EncodeResponseFunc could be something that
-// JSON encodes the object directly to the response body.
+
+//EncodeResponseFunc将响应对象编码为HTTPresponse writer。 它被设计用在HTTP服务器中的服务器的endpoints。
+// 一个简单的EncodeResponseFunc可以将JSON对象直接编码到响应的body中。
 type EncodeResponseFunc func(context.Context, http.ResponseWriter, interface{}) error
 
 // DecodeResponseFunc extracts a user-domain response object from an HTTP
 // response object. It's designed to be used in HTTP clients, for client-side
 // endpoints. One straightforward DecodeResponseFunc could be something that
 // JSON decodes from the response body to the concrete response type.
+
+//DecodeResponseFunc从HTTP响应对象中提取用户域响应对象。 它被设计用在HTTP客户端，为了客户端的endpoints。
+// 一个简单的DecodeResponseFunc可以将JSON对象从响应主体解码为具体响应类型。
 type DecodeResponseFunc func(context.Context, *http.Response) (response interface{}, err error)
 ```
 request_response_funcs.go 
@@ -258,29 +257,35 @@ import (
 	"net/http"
 )
 
-// RequestFunc may take information from an HTTP request and put it into a
-// request context. In Servers, RequestFuncs are executed prior to invoking the
-// endpoint. In Clients, RequestFuncs are executed after creating the request
-// but prior to invoking the HTTP client.
+
+
+//RequestFunc可以从HTTP请求中获取信息，并将其放入请求上下文中。
+//在服务器中，在调用endpoint之前执行RequestFuncs。 
+//在客户端中，在创建请求之后但在调用HTTP客户端之前，将执行RequestFuncs。
 type RequestFunc func(context.Context, *http.Request) context.Context
 
-// ServerResponseFunc may take information from a request context and use it to
-// manipulate a ResponseWriter. ServerResponseFuncs are only executed in
-// servers, after invoking the endpoint but prior to writing a response.
+
+
+//ServerResponseFunc可以从请求上下文中获取信息，并使用它来操作ResponseWriter。
+//ServerResponseFuncs仅在服务器中执行，并且要在在调用endpoint之后，而且在写入响应之前执行。
 type ServerResponseFunc func(context.Context, http.ResponseWriter) context.Context
 
 // ClientResponseFunc may take information from an HTTP request and make the
 // response available for consumption. ClientResponseFuncs are only executed in
 // clients, after a request has been made, but prior to it being decoded.
+
+//ClientResponseFunc可以从HTTP请求中获取信息，并使响应可用来使用。 
+//ClientResponseFuncs仅在在客户端中执行，但是要在发出请求之后，而且在解码之前执行。
 type ClientResponseFunc func(context.Context, *http.Response) context.Context
 
-// SetContentType returns a ServerResponseFunc that sets the Content-Type header
-// to the provided value.
+
+//SetContentType返回一个ServerResponseFunc，它将Content-Type标头设置为传入的值。
 func SetContentType(contentType string) ServerResponseFunc {
 	return SetResponseHeader("Content-Type", contentType)
 }
 
-// SetResponseHeader returns a ServerResponseFunc that sets the given header.
+
+//Set Response Header返回设置为给定header的ServerResponseFunc。
 func SetResponseHeader(key, val string) ServerResponseFunc {
 	return func(ctx context.Context, w http.ResponseWriter) context.Context {
 		w.Header().Set(key, val)
@@ -288,7 +293,7 @@ func SetResponseHeader(key, val string) ServerResponseFunc {
 	}
 }
 
-// SetRequestHeader returns a RequestFunc that sets the given header.
+// Set Request Header returns a RequestFunc that sets the given header.
 func SetRequestHeader(key, val string) RequestFunc {
 	return func(ctx context.Context, r *http.Request) context.Context {
 		r.Header.Set(key, val)
@@ -296,23 +301,34 @@ func SetRequestHeader(key, val string) RequestFunc {
 	}
 }
 
-// PopulateRequestContext is a RequestFunc that populates several values into
-// the context from the HTTP request. Those values may be extracted using the
-// corresponding ContextKey type in this package.
+//PopulateRequestContext是一个RequestFunc，它将几个值从HTTP请求填充到上下文中。 这些值可以使用此包中的相应的ContextKey类型提取出来。
 func PopulateRequestContext(ctx context.Context, r *http.Request) context.Context {
 	for k, v := range map[contextKey]string{
+	   //Method
 		ContextKeyRequestMethod:          r.Method,
+		//URI
 		ContextKeyRequestURI:             r.RequestURI,
+		//Path
 		ContextKeyRequestPath:            r.URL.Path,
+		//Proto
 		ContextKeyRequestProto:           r.Proto,
+		//Host
 		ContextKeyRequestHost:            r.Host,
+		//RemoteAddr
 		ContextKeyRequestRemoteAddr:      r.RemoteAddr,
+		//XForwardedFor
 		ContextKeyRequestXForwardedFor:   r.Header.Get("X-Forwarded-For"),
+		//XForwardedProto
 		ContextKeyRequestXForwardedProto: r.Header.Get("X-Forwarded-Proto"),
+		//Authorization
 		ContextKeyRequestAuthorization:   r.Header.Get("Authorization"),
+		//Referer
 		ContextKeyRequestReferer:         r.Header.Get("Referer"),
+		//UserAgent
 		ContextKeyRequestUserAgent:       r.Header.Get("User-Agent"),
+		//XRequestID
 		ContextKeyRequestXRequestID:      r.Header.Get("X-Request-Id"),
+		//Accept
 		ContextKeyRequestAccept:          r.Header.Get("Accept"),
 	} {
 		ctx = context.WithValue(ctx, k, v)
@@ -323,65 +339,65 @@ func PopulateRequestContext(ctx context.Context, r *http.Request) context.Contex
 type contextKey int
 
 const (
-	// ContextKeyRequestMethod is populated in the context by
-	// PopulateRequestContext. Its value is r.Method.
+	// ContextKeyRequestMethod 通过PopulateRequestContext填充在上下文中	// 他的值是 r.Method.
 	ContextKeyRequestMethod contextKey = iota
 
 	// ContextKeyRequestURI is populated in the context by
-	// PopulateRequestContext. Its value is r.RequestURI.
+	// PopulateRequestContext. 
+	// 他的值是 r.RequestURI.
 	ContextKeyRequestURI
 
 	// ContextKeyRequestPath is populated in the context by
-	// PopulateRequestContext. Its value is r.URL.Path.
+	// PopulateRequestContext. 他的值是 r.URL.Path.
 	ContextKeyRequestPath
 
 	// ContextKeyRequestProto is populated in the context by
-	// PopulateRequestContext. Its value is r.Proto.
+	// PopulateRequestContext. 他的值是 r.Proto.
 	ContextKeyRequestProto
 
 	// ContextKeyRequestHost is populated in the context by
-	// PopulateRequestContext. Its value is r.Host.
+	// PopulateRequestContext. 他的值是 r.Host.
 	ContextKeyRequestHost
 
 	// ContextKeyRequestRemoteAddr is populated in the context by
-	// PopulateRequestContext. Its value is r.RemoteAddr.
+	// PopulateRequestContext. 他的值是 r.RemoteAddr.
 	ContextKeyRequestRemoteAddr
 
 	// ContextKeyRequestXForwardedFor is populated in the context by
-	// PopulateRequestContext. Its value is r.Header.Get("X-Forwarded-For").
+	// PopulateRequestContext. 他的值是 r.Header.Get("X-Forwarded-For").
 	ContextKeyRequestXForwardedFor
 
 	// ContextKeyRequestXForwardedProto is populated in the context by
-	// PopulateRequestContext. Its value is r.Header.Get("X-Forwarded-Proto").
+	// PopulateRequestContext. 他的值是 r.Header.Get("X-Forwarded-Proto").
 	ContextKeyRequestXForwardedProto
 
 	// ContextKeyRequestAuthorization is populated in the context by
-	// PopulateRequestContext. Its value is r.Header.Get("Authorization").
+	// PopulateRequestContext. 他的值是 r.Header.Get("Authorization").
 	ContextKeyRequestAuthorization
 
 	// ContextKeyRequestReferer is populated in the context by
-	// PopulateRequestContext. Its value is r.Header.Get("Referer").
+	// PopulateRequestContext. 他的值是 r.Header.Get("Referer").
 	ContextKeyRequestReferer
 
 	// ContextKeyRequestUserAgent is populated in the context by
-	// PopulateRequestContext. Its value is r.Header.Get("User-Agent").
+	// PopulateRequestContext. 他的值是 r.Header.Get("User-Agent").
 	ContextKeyRequestUserAgent
 
 	// ContextKeyRequestXRequestID is populated in the context by
-	// PopulateRequestContext. Its value is r.Header.Get("X-Request-Id").
+	// PopulateRequestContext. 他的值是 r.Header.Get("X-Request-Id").
 	ContextKeyRequestXRequestID
 
 	// ContextKeyRequestAccept is populated in the context by
-	// PopulateRequestContext. Its value is r.Header.Get("Accept").
+	// PopulateRequestContext. 他的值是 r.Header.Get("Accept").
 	ContextKeyRequestAccept
 
 	// ContextKeyResponseHeaders is populated in the context whenever a
-	// ServerFinalizerFunc is specified. Its value is of type http.Header, and
+	// ServerFinalizerFunc is specified. 他的值是 of type http.Header, and
 	// is captured only once the entire response has been written.
 	ContextKeyResponseHeaders
 
 	// ContextKeyResponseSize is populated in the context whenever a
-	// ServerFinalizerFunc is specified. Its value is of type int64.
+	// ServerFinalizerFunc is specified. 他的值是  int64 类型.
 	ContextKeyResponseSize
 )
 ```
