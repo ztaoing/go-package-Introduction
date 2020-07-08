@@ -1,13 +1,13 @@
 # OpenTracing API for Go 分布式链路追踪规范
-该软件包是用于OpenTracing的Go平台API
+OpenTracing是一个分布式链路追踪的管理平台，可以在平台的基础上实现插拔式的链路追踪组件的融合
 ## Required Reading
 为了理解Go平台的API，首先必须更熟悉OpenTracing项目和术语
 [https://opentracing.io/guides/golang/quick-start/](https://opentracing.io/guides/golang/quick-start/)
 ## API overview for those adding instrumentation
-这个opentracing包的日常消费者实际上只需要担心几个关键的抽象：StartSpan函数，Span接口以及在main（）时绑定Tracer。 以下是代码片段，展示了一些重要的用例。
+这个opentracing包的使用者实际上只需要关注几个关键的抽象：StartSpan函数，Span接口以及在main（）时绑定一个Tracer。 以下是代码片段，展示了一些重要的用例。
 
 * 单例初始化
-The simplest starting point is ./default_tracer.go. As early as possible, call
+最简单的开始时从 ./default_tracer.go. 非常简单而且可行
 
 ```
 import "github.com/opentracing/opentracing-go"
@@ -15,7 +15,7 @@ import "github.com/opentracing/opentracing-go"
 
     func main() {
         opentracing.SetGlobalTracer(
-            // tracing impl specific:
+            // 链路追踪的具体实现:
             some_tracing_impl.New(...),
         )
         ...
@@ -23,9 +23,9 @@ import "github.com/opentracing/opentracing-go"
 ```
 * 非单例初始化
 If you prefer direct control to singletons, manage ownership of the opentracing.Tracer implementation explicitly.
-如果您更喜欢直接控制而不是单例，则显式管理opentracing.Tracer实现的所有权。
-Creating a Span given an existing Go context.Context
-如果在应用程序中使用context.Context，OpenTracing的Go库将很高兴地依靠它进行Span传播。 要启动新的（阻止子级）Span，可以使用StartSpanFromContext。
+如果您更喜欢直接控制单例，则显式管理opentracing.Tracer。
+* 为给定的 Go context.Context创建一个span
+如果在应用程序中使用context.Context，OpenTracing的Go库将很容易依靠它进行Span传播。 要启动新的（阻塞的子级的span）Span，可以使用StartSpanFromContext。
 
 ```
 func xyz(ctx context.Context, ...) {
@@ -39,8 +39,8 @@ func xyz(ctx context.Context, ...) {
         ...
     }
 ```
-**Starting an empty trace by creating a "root span"**
-It's always possible to create a "root" Span with no parent or other causal reference.
+**通过创建一个"root span"来启动一个空的trace**
+总是可以创建没有父级或其他因果引用的“root”span
 
 ```
  func xyz() {
@@ -50,19 +50,20 @@ It's always possible to create a "root" Span with no parent or other causal refe
         ...
     }
 ```
-**Creating a (child) Span given an existing (parent) Span**
+**为(父) Span创建一个(子) Span**
 
 ```
   func xyz(parentSpan opentracing.Span, ...) {
         ...
         sp := opentracing.StartSpan(
             "operation_name",
-            opentracing.ChildOf(parentSpan.Context()))
+            //指定父span
+        opentracing.ChildOf(parentSpan.Context()))
         defer sp.Finish()
         ...
     }
 ```
-**Serializing to the wire**
+**序列化到wire**
 
 ```
 func makeSomeRequest(ctx context.Context) ... {
@@ -70,8 +71,7 @@ func makeSomeRequest(ctx context.Context) ... {
             httpClient := &http.Client{}
             httpReq, _ := http.NewRequest("GET", "http://myservice/", nil)
 
-            // Transmit the span's TraceContext as HTTP headers on our
-            // outbound request.
+            // 把发送span的TraceContext作为 HTTP的request的头信息
             opentracing.GlobalTracer().Inject(
                 span.Context(),
                 opentracing.HTTPHeaders,
@@ -83,7 +83,7 @@ func makeSomeRequest(ctx context.Context) ... {
         ...
     }
 ```
-**Deserializing from the wire**
+**从wire反序列化**
 
 ```
 http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
@@ -96,8 +96,8 @@ http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
             // Optionally record something about err here
         }
 
-        // Create the span referring to the RPC client if available.
-        // If wireContext == nil, a root span will be created.
+        // 如有有可用的rpc client 可以创建span指向rpc client
+        // 如果 wireContext == nil, 会创建一个 root span 
         serverSpan = opentracing.StartSpan(
             appSpecificOperationName,
             ext.RPCServerOption(wireContext))
@@ -108,11 +108,12 @@ http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
         ...
     }
 ```
-**Conditionally capture a field using log.Noop**
+**使用log.Noop有条件地捕获字段**
 在某些情况下，您可能希望动态决定是否记录一个字段。 例如，您可能想在非生产环境中捕获其他数据，例如客户ID：
 
 ```
 func Customer(order *Order) log.Field {
+        //测试环境
         if os.Getenv("ENVIRONMENT") == "dev" {
             return log.String("customer", order.Customer.ID)
         }
@@ -147,6 +148,7 @@ import (
 func main() {
     // Sample configuration for testing. Use constant sampling to sample every trace
     // and enable LogSpan to log every span via configured Logger.
+    //用于测试的样本配置。 使用恒定采样来采样每个跟踪，并使LogSpan能够通过配置的Logger记录每个span。
     cfg := jaegercfg.Configuration{
         ServiceName: "your_service_name",
         Sampler:     &jaegercfg.SamplerConfig{
@@ -158,18 +160,17 @@ func main() {
         },
     }
 
-    // Example logger and metrics factory. Use github.com/uber/jaeger-client-go/log
-    // and github.com/uber/jaeger-lib/metrics respectively to bind to real logging and metrics
-    // frameworks.
-    jLogger := jaegerlog.StdLogger
+    // 记录日志和指标信息使用 github.com/uber/jaeger-client-go/log
+    // 和 github.com/uber/jaeger-lib/metrics 分别绑定到真正的  logging 和 metrics 框架
+       jLogger := jaegerlog.StdLogger
     jMetricsFactory := metrics.NullFactory
 
-    // Initialize tracer with a logger and a metrics factory
+    // 使用日志和指标组件初始化一个链路追踪
     tracer, closer, err := cfg.NewTracer(
         jaegercfg.Logger(jLogger),
         jaegercfg.Metrics(jMetricsFactory),
     )
-    // Set the singleton opentracing.Tracer with the Jaeger tracer.
+    // 使用 Jaeger tracer组件来设置单例的opentracing.Tracer.
     opentracing.SetGlobalTracer(tracer)
     defer closer.Close()
 
@@ -177,7 +178,7 @@ func main() {
 }
 
 ```
-**Start a Trace**
+**启动一个链路追踪器**
 
 ```
 import (
@@ -192,7 +193,7 @@ span := tracer.StartSpan("say-hello")
 println(helloStr)
 span.Finish()
 ```
-**Create a Child Span**
+**创建一个子级span**
 
 ```
 import (
@@ -208,18 +209,19 @@ defer parentSpan.Finish()
 
 ...
 
-// Create a Child Span. Note that we're using the ChildOf option.
+// 使用ChildOf选项，创建一个子级span.
 childSpan := tracer.StartSpan(
     "child",
     opentracing.ChildOf(parentSpan.Context()),
 )
 defer childSpan.Finish()
 ```
-**Make an HTTP request**
+**创建一个 HTTP 请求**
 
-为了获得跨服务边界的跟踪，我们通过将上下文注入http头中来传播上下文。 下游服务收到http请求后，必须提取上下文并继续跟踪。 （代码示例无法正确处理错误，请不要在生产代码中执行此操作；这只是一个示例）
+我们通过将Context上下文注入http headers中以达到在服务之间传播目的。 一旦，下游服务收到http请求后，必须提取上下文并继续跟踪。 
+注意：（代码示例无法正确处理错误，请不要在生产代码中执行此操作；这只是一个示例）
 
-**The upstream(client) service:**
+**上游服务(client)**
 
 ```
 import (
@@ -239,16 +241,18 @@ defer clientSpan.Finish()
 url := "http://localhost:8082/publish"
 req, _ := http.NewRequest("GET", url, nil)
 
-// Set some tags on the clientSpan to annotate that it's the client span. The additional HTTP tags are useful for debugging purposes.
+// 通过在clientSpan上设置一些tags，来标明它是client 端的span  ，额外的 HTTP tags 对调试很有帮助.
 ext.SpanKindRPCClient.Set(clientSpan)
 ext.HTTPUrl.Set(clientSpan, url)
 ext.HTTPMethod.Set(clientSpan, "GET")
 
-// Inject the client span context into the headers
+// 将client端span的上下文注入到headers中
 tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
 resp, _ := http.DefaultClient.Do(req)
-The downstream(server) service:
+```
+**下游服务(server)**
 
+```
 import (
     "log"
     "net/http"
@@ -259,12 +263,12 @@ import (
 
 func main() {
 
-    // Tracer initialization, etc.
+    // 链路追踪器初始化, etc.
 
     ...
 
     http.HandleFunc("/publish", func(w http.ResponseWriter, r *http.Request) {
-        // Extract the context from the headers
+        // 从headers中提取上下文context
         spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
         serverSpan := tracer.StartSpan("server", ext.RPCServerOption(spanCtx))
         defer serverSpan.Finish()
@@ -273,8 +277,9 @@ func main() {
     log.Fatal(http.ListenAndServe(":8082", nil))
 }
 ```
-**View your trace**
-If you have Jaeger all-in-one running, you can view your trace at localhost:16686.
+**展示链路追踪**
+如果你有 Jaeger 一起运行, 你可以在localhost:16686查看链路追踪的效果.
+
 **Link to GO walkthroughs / tutorials**
 * Take OpenTracing for a HotROD Ride involves successive optimizations of a Go-based Ride-on-Demand demonstration service, all informed by tracing data.
 * In-depth Self-Guided Golang Opentracing Tutorial
@@ -289,17 +294,18 @@ OpenTracing Go API允许线程中的一个跨度在任何时间点都处于活�
 * Waiting for I/O,
 * Blocked on a child Span or
 * Off of the critical path
-**Accessing the Current Active Span**
+**访问当前激活状态的span**
 开发人员可以通过范围访问任何活动范围，如下所示：
 
 ```
  ** Go code snippet here **
 ```
-**Moving a Span between Threads**
+**在线程之间传递span**
 
 使用OpenTracing API，开发人员可以在不同线程之间传输跨度。 跨度的生命周期可能在一个线程中开始，而在另一个线程中结束。 不支持将范围传递给另一个线程或回调。
 
 **span：约定和标准**
+
 **操作名称和基数**
 应用程序和库开发人员需要指定每个范围的操作名称。 操作名称是跨度类的通用名称，代表唯一的实例。 以下是在Go中使用操作名称“ say-hello”初始化跨度的语句：
 
