@@ -1,4 +1,6 @@
 # go package 介绍
+* [grpc中文文档](http://doc.oschina.net/grpc)
+-------
 * opentracing-go (平台)[github.com/opentracing/opentracing-go](github.com/opentracing/opentracing-go)
 * zipkin-go-opentracing (opentracing与zipkin的桥梁)[github.com/openzipkin-contrib/zipkin-go-opentracing](github.com/openzipkin-contrib/zipkin-go-opentracing)
 * zipkin-go (一款链路追踪组件）[github.com/openzipkin/zipkin-go](github.com/openzipkin/zipkin-go)
