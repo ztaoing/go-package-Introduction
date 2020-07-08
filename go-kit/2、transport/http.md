@@ -3,7 +3,7 @@
 
 -------
 client.go
-```
+```golang
 package http
 
 import (
