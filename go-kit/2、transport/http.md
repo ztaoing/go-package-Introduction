@@ -416,7 +416,7 @@ import (
 	"github.com/go-kit/kit/transport"
 )
 
-// Server wraps an endpoint and implements http.Handler.
+// Server 包装了一个endpoint同时实现了 http.Handler.
 type Server struct {
 	e            endpoint.Endpoint
 	dec          DecodeRequestFunc
@@ -428,8 +428,7 @@ type Server struct {
 	errorHandler transport.ErrorHandler
 }
 
-// NewServer constructs a new server, which implements http.Handler and wraps
-// the provided endpoint.
+// NewServer 构造了一个 server,它实现了http.Handler ，同时包装了被提供endpoint.
 func NewServer(
 	e endpoint.Endpoint,
 	dec DecodeRequestFunc,
@@ -449,55 +448,50 @@ func NewServer(
 	return s
 }
 
-// ServerOption sets an optional parameter for servers.
+//ServerOption为Server设置一个可选参数。
 type ServerOption func(*Server)
 
-// ServerBefore functions are executed on the HTTP request object before the
-// request is decoded.
+// ServerBefore functions are executed on the HTTP request object before the request is decoded.
 func ServerBefore(before ...RequestFunc) ServerOption {
 	return func(s *Server) { s.before = append(s.before, before...) }
 }
 
-// ServerAfter functions are executed on the HTTP response writer after the
-// endpoint is invoked, but before anything is written to the client.
+// ServerAfter functions are executed on the HTTP response writer after the endpoint is invoked, but before anything is written to the client.
 func ServerAfter(after ...ServerResponseFunc) ServerOption {
 	return func(s *Server) { s.after = append(s.after, after...) }
 }
 
-// ServerErrorEncoder is used to encode errors to the http.ResponseWriter
-// whenever they're encountered in the processing of a request. Clients can
-// use this to provide custom error formatting and response codes. By default,
-// errors will be written with the DefaultErrorEncoder.
+
+//ServerErrorEncoder用于在处理请求时遇到错误时对http.ResponseWriter进行编码。 客户可以使用它来提供自定义错误格式和响应代码。 
+//默认情况下,将使用DefaultErrorEncoder。
 func ServerErrorEncoder(ee ErrorEncoder) ServerOption {
 	return func(s *Server) { s.errorEncoder = ee }
 }
 
-// ServerErrorLogger is used to log non-terminal errors. By default, no errors
-// are logged. This is intended as a diagnostic measure. Finer-grained control
-// of error handling, including logging in more detail, should be performed in a
-// custom ServerErrorEncoder or ServerFinalizer, both of which have access to
-// the context.
-// Deprecated: Use ServerErrorHandler instead.
+
+
+//ServerErrorLogger用于记录非终端错误。 默认情况下，不记录任何错误。 这旨在作为一种诊断措施。 
+//应该在自定义的ServerErrorEncoder或ServerFinalizer中执行对错误处理的更细粒度的控制，包括更详细的日志记录，这两者都可以访问上下文。
+// 已弃用：改用ServerErrorHandler。
 func ServerErrorLogger(logger log.Logger) ServerOption {
 	return func(s *Server) { s.errorHandler = transport.NewLogErrorHandler(logger) }
 }
 
-// ServerErrorHandler is used to handle non-terminal errors. By default, non-terminal errors
-// are ignored. This is intended as a diagnostic measure. Finer-grained control
-// of error handling, including logging in more detail, should be performed in a
-// custom ServerErrorEncoder or ServerFinalizer, both of which have access to
-// the context.
+
+//ServerErrorHandler用于处理非终端错误。 默认情况下，将忽略非终端错误。 这旨在作为一种诊断措施。 
+//应该在自定义的ServerErrorEncoder或ServerFinalizer中执行对错误处理的更细粒度的控制，包括更详细的日志记录，这两者都可以访问上下文。
 func ServerErrorHandler(errorHandler transport.ErrorHandler) ServerOption {
 	return func(s *Server) { s.errorHandler = errorHandler }
 }
 
-// ServerFinalizer is executed at the end of every HTTP request.
-// By default, no finalizer is registered.
+
+//ServerFinalizer在每个HTTP请求的末尾执行。
+//  默认情况下，没有注册finalizer。
 func ServerFinalizer(f ...ServerFinalizerFunc) ServerOption {
 	return func(s *Server) { s.finalizer = append(s.finalizer, f...) }
 }
 
-// ServeHTTP implements http.Handler.
+// **ServeHTTP 实现了 http.Handler.**
 func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -506,35 +500,36 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			ctx = context.WithValue(ctx, ContextKeyResponseHeaders, iw.Header())
 			ctx = context.WithValue(ctx, ContextKeyResponseSize, iw.written)
+			//逐个执行finalizer
 			for _, f := range s.finalizer {
 				f(ctx, iw.code, r)
 			}
 		}()
 		w = iw
 	}
-
+//在请求之前
 	for _, f := range s.before {
 		ctx = f(ctx, r)
 	}
-
+//解码
 	request, err := s.dec(ctx, r)
 	if err != nil {
 		s.errorHandler.Handle(ctx, err)
 		s.errorEncoder(ctx, err, w)
 		return
 	}
-
+//endpoint
 	response, err := s.e(ctx, request)
 	if err != nil {
 		s.errorHandler.Handle(ctx, err)
 		s.errorEncoder(ctx, err, w)
 		return
 	}
-
+//在之后
 	for _, f := range s.after {
 		ctx = f(ctx, w)
 	}
-
+//编码
 	if err := s.enc(ctx, w, response); err != nil {
 		s.errorHandler.Handle(ctx, err)
 		s.errorEncoder(ctx, err, w)
@@ -542,21 +537,16 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ErrorEncoder is responsible for encoding an error to the ResponseWriter.
-// Users are encouraged to use custom ErrorEncoders to encode HTTP errors to
-// their clients, and will likely want to pass and check for their own error
-// types. See the example shipping/handling service.
+// 鼓励用户使用自定义ErrorEncoders将HTTP错误编码到其客户端，并且可能希望传递并检查自己的错误类型。 请参阅示例shipping/handling服务。
 type ErrorEncoder func(ctx context.Context, err error, w http.ResponseWriter)
 
-// ServerFinalizerFunc can be used to perform work at the end of an HTTP
-// request, after the response has been written to the client. The principal
-// intended use is for request logging. In addition to the response code
-// provided in the function signature, additional response parameters are
-// provided in the context under keys with the ContextKeyResponse prefix.
+
+//将响应写入客户端后，可以使用ServerFinalizerFunc在HTTP请求结束时执行工作。 主要用途是用于请求日志记录。 
+//除了功能签名中提供的响应代码外，上下文中还提供了其他响应参数，这些参数带有ContextKeyResponse前缀。
 type ServerFinalizerFunc func(ctx context.Context, code int, r *http.Request)
 
-// NopRequestDecoder is a DecodeRequestFunc that can be used for requests that do not
-// need to be decoded, and simply returns nil, nil.
+
+//NopRequestDecoder是一个DecodeRequestFunc，可用于不需要解码的请求，仅返回nil，nil就可以。
 func NopRequestDecoder(ctx context.Context, r *http.Request) (interface{}, error) {
 	return nil, nil
 }
@@ -566,6 +556,9 @@ func NopRequestDecoder(ctx context.Context, r *http.Request) (interface{}, error
 // a sensible default. If the response implements Headerer, the provided headers
 // will be applied to the response. If the response implements StatusCoder, the
 // provided StatusCode will be used instead of 200.
+
+//EncodeJSONResponse是一个EncodeResponseFunc，它将响应序列作为JSON对象并序列化到ResponseWriter。 许多基于HTTP的JSON服务都可以将其用作推荐的默认设置。
+// 如果响应实现了Headerer，则提供的headers将应用在响应中。 如果响应实现了StatusCoder，则将使用提供的StatusCode代替200。
 func EncodeJSONResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if headerer, ok := response.(Headerer); ok {
@@ -593,6 +586,11 @@ func EncodeJSONResponse(_ context.Context, w http.ResponseWriter, response inter
 // the marshaling succeeds, a content type of application/json and the JSON
 // encoded form of the error will be used. If the error implements StatusCoder,
 // the provided StatusCode will be used instead of 500.
+
+//DefaultErrorEncoder将错误写入ResponseWriter，默认情况下为text/plain的内容类型，错误的纯文本body以及状态码500。
+//如果error实现Headerer，则提供的headers将应用在响应 。
+//如果error实现json.Marshaler，并且marshal成功，则将使用application/json的内容类型和错误的JSON编码形式。
+// 如果error实现了StatusCoder，则将使用提供的StatusCode代替500。
 func DefaultErrorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 	contentType, body := "text/plain; charset=utf-8", []byte(err.Error())
 	if marshaler, ok := err.(json.Marshaler); ok {
@@ -616,9 +614,10 @@ func DefaultErrorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 	w.Write(body)
 }
 
-// StatusCoder is checked by DefaultErrorEncoder. If an error value implements
-// StatusCoder, the StatusCode will be used when encoding the error. By default,
-// StatusInternalServerError (500) is used.
+
+
+//StatusCoder由DefaultErrorEncoder检查。 如果error实现了StatusCoder，则在编码错误时将使用StatusCode。
+// 默认情况下，使用StatusInternalServerError（500）。
 type StatusCoder interface {
 	StatusCode() int
 }
@@ -626,6 +625,9 @@ type StatusCoder interface {
 // Headerer is checked by DefaultErrorEncoder. If an error value implements
 // Headerer, the provided headers will be applied to the response writer, after
 // the Content-Type is set.
+
+//Headerer由DefaultErrorEncoder来检查。 
+//如果error value 实现了Headerer，则在设置Content-Type之后，提供的headers将应用在response writer中。
 type Headerer interface {
 	Headers() http.Header
 }
@@ -636,8 +638,7 @@ type interceptingWriter struct {
 	written int64
 }
 
-// WriteHeader may not be explicitly called, so care must be taken to
-// initialize w.code to its default value of http.StatusOK.
+//无法显式调用WriteHeader，因此必须注意将w.code初始化为其默认值http.StatusOK。
 func (w *interceptingWriter) WriteHeader(code int) {
 	w.code = code
 	w.ResponseWriter.WriteHeader(code)
