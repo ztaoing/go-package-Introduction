@@ -24,6 +24,7 @@ propagation和B3子包，拥有用于链路追踪的，在服务之间传播Span
 
 * grpc
 使用grpc.StatsHandler中间件来跟踪gRPC服务器和客户端请求是很方便的。
+
 对于一个服务器，请在调用NewServer时传递NewServerHandler，例如
 
 ```
@@ -34,7 +35,7 @@ import (
 
 server = grpc.NewServer(grpc.StatsHandler(zipkingrpc.NewServerHandler(tracer)))
 ```
-对于客户端，请在致电Dial时传递NewClientHandler，例如
+对于客户端，请在Dial时传递NewClientHandler，例如
 
 ```
 import (
@@ -49,7 +50,7 @@ reporter包中包含各种用Reporter实现的的接口。 它被导出到其自
 1. HTTP Reporter
 Zipkin用户传输spans到Zipkin服务器时使用的最常见的Reporter类型就是JSON。 Reporter程序拥有一个缓冲区，并异步向后端报告。
 2. Kafka Reporter
-高性能Reporter使用Kafka Producer消化JSON V2 Spans来将Span传输到Zipkin服务器。 记者在下面使用Sarama异步制作器。
+高性能Reporter使用Kafka Producer消化JSON V2 Spans来将Span传输到Zipkin服务器。 Reporter在下面使用Sarama异步方式完成。
 
 #### usage and examples
 
