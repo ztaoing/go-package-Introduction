@@ -19,12 +19,12 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-// HTTPClient is an interface that models *http.Client.
+// HTTPClient是模拟* http.Client的接口。
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// Client wraps a URL and provides a method that implements endpoint.Endpoint.
+// Client包装了一个URL，并提供一种实现endpoint.Endpoint的方法。
 type Client struct {
 	client         HTTPClient
 	req            CreateRequestFunc
@@ -35,14 +35,12 @@ type Client struct {
 	bufferedStream bool
 }
 
-// NewClient constructs a usable Client for a single remote method.
+// NewClient为单个远程方法构造一个可用的客户端。
 func NewClient(method string, tgt *url.URL, enc EncodeRequestFunc, dec DecodeResponseFunc, options ...ClientOption) *Client {
 	return NewExplicitClient(makeCreateRequestFunc(method, tgt, enc), dec, options...)
 }
 
-// NewExplicitClient is like NewClient but uses a CreateRequestFunc instead of a
-// method, target URL, and EncodeRequestFunc, which allows for more control over
-// the outgoing HTTP request.
+//NewExplicitClient与NewClient类似，但使用CreateRequestFunc代替方法，目标URL和EncodeRequestFunc，从而可以更好地控制发出的HTTP请求。
 func NewExplicitClient(req CreateRequestFunc, dec DecodeResponseFunc, options ...ClientOption) *Client {
 	c := &Client{
 		client: http.DefaultClient,
@@ -55,44 +53,36 @@ func NewExplicitClient(req CreateRequestFunc, dec DecodeResponseFunc, options ..
 	return c
 }
 
-// ClientOption sets an optional parameter for clients.
+// ClientOption为客户端设置一个可选参数。
 type ClientOption func(*Client)
 
-// SetClient sets the underlying HTTP client used for requests.
-// By default, http.DefaultClient is used.
+// SetClient设置用于请求的基础HTTP客户端。
+// 默认情况下使用 http.DefaultClient
 func SetClient(client HTTPClient) ClientOption {
 	return func(c *Client) { c.client = client }
 }
 
-// ClientBefore adds one or more RequestFuncs to be applied to the outgoing HTTP
-// request before it's invoked.
+// 在发送HTTP请求之前调用ClientBefore执行一个或多个RequestFuncs。
 func ClientBefore(before ...RequestFunc) ClientOption {
 	return func(c *Client) { c.before = append(c.before, before...) }
 }
 
-// ClientAfter adds one or more ClientResponseFuncs, which are applied to the
-// incoming HTTP response prior to it being decoded. This is useful for
-// obtaining anything off of the response and adding it into the context prior
-// to decoding.
+// ClientAfter添加一个或多个ClientResponseFuncs，它们在解码之前将应用于传入的HTTP响应。 这对于从响应中获取任何内容并将其添加到解码之前的上下文中，是很有用处的。
 func ClientAfter(after ...ClientResponseFunc) ClientOption {
 	return func(c *Client) { c.after = append(c.after, after...) }
 }
 
-// ClientFinalizer adds one or more ClientFinalizerFuncs to be executed at the
-// end of every HTTP request. Finalizers are executed in the order in which they
-// were added. By default, no finalizer is registered.
+// ClientFinalizer添加一个或多个ClientFinalizerFunc，以在每个HTTP请求的末尾执行。 Finalizers按其添加的顺序执行。 默认情况下，不会注册finalizer。
 func ClientFinalizer(f ...ClientFinalizerFunc) ClientOption {
 	return func(s *Client) { s.finalizer = append(s.finalizer, f...) }
 }
 
-// BufferedStream sets whether the HTTP response body is left open, allowing it
-// to be read from later. Useful for transporting a file as a buffered stream.
-// That body has to be drained and closed to properly end the request.
+BufferedStream设置HTTP响应主体是否保持打开状态，以便以后可以读取。 对于将文件作为缓冲流传输很有用。 该主体必须用完并关闭才能正确结束请求。
 func BufferedStream(buffered bool) ClientOption {
 	return func(c *Client) { c.bufferedStream = buffered }
 }
 
-// Endpoint returns a usable Go kit endpoint that calls the remote HTTP endpoint.
+//Endpoint返回一个可用的Go kit Endpoint，该Endpoint调用远程HTTP的Endpoint。 
 func (c Client) Endpoint() endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		ctx, cancel := context.WithCancel(ctx)
@@ -129,10 +119,8 @@ func (c Client) Endpoint() endpoint.Endpoint {
 			return nil, err
 		}
 
-		// If the caller asked for a buffered stream, we don't cancel the
-		// context when the endpoint returns. Instead, we should call the
-		// cancel func when closing the response body.
-		if c.bufferedStream {
+		//如果调用方请求一个缓冲流，则在endpoint返回时我们不会取消上下文。 相反，我们应该在关闭response的body的时候调用cancel函数。
+	if c.bufferedStream {
 			resp.Body = bodyWithCancel{ReadCloser: resp.Body, cancel: cancel}
 		} else {
 			defer resp.Body.Close()
@@ -152,8 +140,7 @@ func (c Client) Endpoint() endpoint.Endpoint {
 	}
 }
 
-// bodyWithCancel is a wrapper for an io.ReadCloser with also a
-// cancel function which is called when the Close is used
+// bodyWithCancel是io.ReadCloser的一个包装，当关闭的时候cancel函数会被调用
 type bodyWithCancel struct {
 	io.ReadCloser
 
@@ -166,18 +153,14 @@ func (bwc bodyWithCancel) Close() error {
 	return nil
 }
 
-// ClientFinalizerFunc can be used to perform work at the end of a client HTTP
-// request, after the response is returned. The principal
-// intended use is for error logging. Additional response parameters are
-// provided in the context under keys with the ContextKeyResponse prefix.
-// Note: err may be nil. There maybe also no additional response parameters
-// depending on when an error occurs.
+//在返回响应后，可以使用ClientFinalizerFunc在客户端HTTP请求的末尾执行工作。 主要用途是用于错误记录。
+// 上下文中在带有ContextKeyResponse前缀的键下提供了其他响应参数。 
+//注意：err可能为nil。 根据何时发生错误，有可能也没有其他响应参数。
 type ClientFinalizerFunc func(ctx context.Context, err error)
 
-// EncodeJSONRequest is an EncodeRequestFunc that serializes the request as a
-// JSON object to the Request body. Many JSON-over-HTTP services can use it as
-// a sensible default. If the request implements Headerer, the provided headers
-// will be applied to the request.
+
+//EncodeJSONRequest是一个EncodeRequestFunc，它将请求序列化为JSON对象，并存储到Request的body中。 
+//许多基于HTTP的JSON服务都可以将其用作明智的默认设置。 如果请求实现了Headerer，则将提供的headers应用到请求中。
 func EncodeJSONRequest(c context.Context, r *http.Request, request interface{}) error {
 	r.Header.Set("Content-Type", "application/json; charset=utf-8")
 	if headerer, ok := request.(Headerer); ok {
@@ -190,9 +173,9 @@ func EncodeJSONRequest(c context.Context, r *http.Request, request interface{}) 
 	return json.NewEncoder(&b).Encode(request)
 }
 
-// EncodeXMLRequest is an EncodeRequestFunc that serializes the request as a
-// XML object to the Request body. If the request implements Headerer,
-// the provided headers will be applied to the request.
+
+//EncodeXMLRequest是一个EncodeRequestFunc，它将请求序列化为XML对象保存到Request的body中。
+//如果请求实现了Headerer，则将提供的headers应用到请求中。
 func EncodeXMLRequest(c context.Context, r *http.Request, request interface{}) error {
 	r.Header.Set("Content-Type", "text/xml; charset=utf-8")
 	if headerer, ok := request.(Headerer); ok {
@@ -236,10 +219,9 @@ import (
 	"net/http"
 )
 
-// DecodeRequestFunc extracts a user-domain request object from an HTTP
-// request object. It's designed to be used in HTTP servers, for server-side
-// endpoints. One straightforward DecodeRequestFunc could be something that
-// JSON decodes from the request body to the concrete request type.
+
+//DecodeRequestFunc从HTTP请求对象中提取用户域请求对象。 它被设计成用在HTTP服务器中的服务器端的endpoints。 
+//一个简单的DecodeRequestFunc可以是JSON从请求的body中解码为具体的请求类型。
 type DecodeRequestFunc func(context.Context, *http.Request) (request interface{}, err error)
 
 // EncodeRequestFunc encodes the passed request object into the HTTP request
