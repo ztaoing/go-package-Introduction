@@ -33,3 +33,4 @@
 * viper [github.com/spf13/viper](github.com/spf13/viper)
 * unknwon/com[ github.com/unknwon/com]( github.com/unknwon/com)
 * gorilla/websocket [github.com/gorilla/websocket](https://github.com/gorilla/websocket)
+* grpc-gateway [github.com/grpc-ecosystem/grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway)
