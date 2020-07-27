@@ -6,7 +6,7 @@ Requires Go 1.12 or newer.
 原理
 -------
 bigcache几个核心的数据结构：
-* liftWindown
+* leftWindown
 * hasher
 * cacheShard :sync.RWMutex 、map、queue.BytesQueue
 * shardMask
