@@ -2,6 +2,34 @@
 快速，并发，退出内存中的高速缓存被写入，以保留大量条目，而不会影响性能。 BigCache将条目保留在堆上，但省略了它们的GC。 为此，需要对字节片进行操作，因此在大多数使用情况下，需要在缓存前面进行条目（反序列化）。
 
 Requires Go 1.12 or newer.
+
+原理
+-------
+bigcache几个核心的数据结构：
+* liftWindown
+* hasher
+* cacheShard :sync.RWMutex 、map、queue.BytesQueue
+* shardMask
+* Config
+
+##### hasher:
+通过hasher提供的hash功能将字符串类型的key转换为uint64类型的hash值。该值有两个用途：
+1. 作为[]*cacheShard切片的索引，获取该key对应的cacheShard指针
+2. 作为cacheShard类型中map[uint64]uint32类型字段的key
+因为对bigcache结构的相关操作是无锁操作，所以分片技术是并发性能提升的关键
+
+##### cacheShard：
+单个分片类型，缓存的核心功能由该类型提供，由sync.RWMutex字段可以得知。他是多线程安全的，其中map[uint64]uint32和queue.BytesQueue是零GC的关键。
+
+##### queue.BytesQueue：
+queue是该包的一个子包，BytesQueue是一个基于字节数组的FIFO队列。某个分片中所有的缓存值都存放在这个字节数组中。当一个记录加入缓存时，它的值会被push到该队列的尾部，同时返回记录的值在该字节数组中的索引，这个索引就是cacheShard类型中map[uint64]uint32字段的value。BytesQueue使用了变长的整数，这是通过标准库encoding/binary实现的
+##### leftWindow:
+多久后自己自动删除。bigcache的淘汰策略使用的是时间策略，即根据固定的一个过期时间用FIFO算法进行淘汰
+
+##### 并发优化：
+数据分片
+##### GC优化：
+把hash值作为map[uint64]uint32的key,把缓存对象序列化后放到一个预先分配的大的字节数组中，然后把它在数组中的offset作为map[uin64]uint32的value。
 使用
 -------
 #### 简单初始化：
