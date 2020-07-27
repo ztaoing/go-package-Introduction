@@ -31,6 +31,7 @@ queue是该包的一个子包，BytesQueue是一个基于字节数组的FIFO队�
 ##### GC优化：
 把hash值作为map[uint64]uint32的key,把缓存对象序列化后放到一个预先分配的大的字节数组中，然后把它在数组中的offset作为map[uin64]uint32的value。
 使用
+
 -------
 #### 简单初始化：
 ```
