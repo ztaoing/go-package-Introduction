@@ -34,4 +34,12 @@
 * unknwon/com[ github.com/unknwon/com]( github.com/unknwon/com)
 * gorilla/websocket [github.com/gorilla/websocket](https://github.com/gorilla/websocket)
 * grpc-gateway [github.com/grpc-ecosystem/grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway)
+* protoc-gen-grpc-gateway [https://github.com/grpc-ecosystem/grpc-gateway/tree/master/protoc-gen-grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway/tree/master/protoc-gen-grpc-gateway)
 * grpcurl  [github.com/fullstorydev/grpcurl](https://github.com/fullstorydev/grpcurl)
+* soheilhy/cmux 在相同端口监听多种协议,根据有效负载对连接进行多路复用，只匹配连接的前面的字节来区分当前连接的类型，可以在同一个 TCP Listenner上提供几乎所有的协议服务，是一个相对通用的方案
+[github.com/soheilhy/cmux](https://github.com/soheilhy/cmux)
+
+* grpc-gateway/protoc-gen-swagger [ github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger]( github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger)
+* go-bindata[https://github.com/go-bindata/go-bindata](https://github.com/go-bindata/go-bindata)
+* jaeger-client-go [github.com/jaegertracing/jaeger-client-go](github.com/jaegertracing/jaeger-client-go)
+* bigcache 已译 [https://github.com/allegro/bigcache](https://github.com/allegro/bigcache)
