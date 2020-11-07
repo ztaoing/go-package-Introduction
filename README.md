@@ -42,7 +42,7 @@
 * grpc-gateway/protoc-gen-swagger [ github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger]( github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger)
 * go-bindata[https://github.com/go-bindata/go-bindata](https://github.com/go-bindata/go-bindata)
 * jaeger-client-go [github.com/jaegertracing/jaeger-client-go](github.com/jaegertracing/jaeger-client-go)
-* bigcache[https://github.com/allegro/bigcache](https://github.com/allegro/bigcache)
+* bigcache [https://github.com/allegro/bigcache](https://github.com/allegro/bigcache)
 * cobra[github.com/spf13/cobra](github.com/spf13/cobra)
 * lumberjack.v2 把日志写入滚动文件中[gopkg.in/natefinch/lumberjack.v2](gopkg.in/natefinch/lumberjack.v2)
 * swaggo [github.com/swaggo/swag/cmd/swag](github.com/swaggo/swag/cmd/swag)
@@ -57,3 +57,6 @@
 * sql链路追踪-gorm[github.com/eddycjy/opentracing-gorm](github.com/eddycjy/opentracing-gorm)
 * fsnotify 热更新,是基于golang.org/x/sys/ 实现的[github.com/fsnotify/fsnotify](github.com/fsnotify/fsnotify)
 * sys[ golang.org/x/sys/...]( golang.org/x/sys/...)
+
+ETCD
+* goreman [etcd集群部署] https://github.com/mattn/goreman
