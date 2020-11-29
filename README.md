@@ -60,3 +60,6 @@
 
 ETCD
 * goreman [etcd集群部署] https://github.com/mattn/goreman
+
+GO DOCKER:
+* automaxprocs [在容器中通过cgroups获取可用CPU的数量](https://github.com/uber-go/automaxprocs.git)
