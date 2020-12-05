@@ -5,6 +5,7 @@
 * zipkin-go-opentracing (opentracing与zipkin的桥梁)[github.com/openzipkin-contrib/zipkin-go-opentracing](github.com/openzipkin-contrib/zipkin-go-opentracing)
 * zipkin-go (一款链路追踪组件）[github.com/openzipkin/zipkin-go](github.com/openzipkin/zipkin-go)
 * zo-kit-zipkin :[https://github.com/go-kit/kit/tree/master/tracing/zipkin](https://github.com/go-kit/kit/tree/master/tracing/zipkin)
+* grpc-opentracing(在grpc中使用链路追踪](https://github.com/grpc-ecosystem/grpc-opentracing)
 -------
 * go-kit [github.com/go-kit/kit](https://github.com/go-kit/kit)
 * go-kit/kit/metrics/prometheus [github.com/go-kit/kit/metrics/prometheus](github.com/go-kit/kit/metrics/prometheus)
